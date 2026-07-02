@@ -8,7 +8,7 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
-    const authRoutes = ["/login", "/register"];
+    const authRoutes = ["/login", "/register", "/"];
     const isAuthPage = authRoutes.includes(pathname);
 
     if (!token && !isAuthPage) {
