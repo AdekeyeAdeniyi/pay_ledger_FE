@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand Palette Definition */
+  --color-pl-ink: #0a0e1a;
+  --color-pl-ink-2: #3d4461;
+  --color-pl-ink-3: #7b82a0;
+  --color-pl-surface: #f4f5f9;
+  --color-pl-white: #ffffff;
+
+  --color-pl-primary: #2e5bff;
+  --color-pl-primary-light: #eef2ff;
+  --color-pl-primary-dark: #1a3acc;
+
+  --color-pl-emerald: #00c896;
+  --color-pl-emerald-light: #e6fbf5;
+  --color-pl-emerald-dark: #00946f;
+
+  --color-pl-amber: #f5a623;
+  --color-pl-amber-light: #fef6e7;
+
+  --color-pl-red: #e53e3e;
+  --color-pl-red-light: #fef0f0;
+
+  --color-pl-violet: #7c3aed;
+  --color-pl-violet-light: #f3effe;
+
+  /* Border Radius Constraints */
+  --radius-pl-sm: 8px;
+  --radius-pl-md: 12px;
+  --radius-pl-lg: 16px;
+  --radius-pl-xl: 24px;
+  --radius-pl-pill: 100px;
+
+  /* Glassmorphism Specification Tokens */
+  --background-image-pl-glass-bg: rgba(255, 255, 255, 0.6);
+  --border-color-pl-glass-border: rgba(255, 255, 255, 0.4);
+
+  --shadow-pl-glass-shadow: 0 8px 32px rgba(46, 91, 255, 0.08), 0 1.5px 4px rgba(10, 14, 26, 0.06);
+}
+
+/* Custom Component Utilities from Style Guide Rules */
+@layer utilities {
+  .backdrop-blur-glass {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
+body {
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background-color: var(--color-pl-surface);
+  color: var(--color-pl-ink);
+  line-height: 1.6;
+  font-size: 14px;
+  overflow-x: hidden;
+}
+
+@layer utilities {
+  /* High contrast, minimalist custom scrollbar engine for all elements */
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(10, 14, 26, 0.15); /* Mapped to match --pl-border-dark opacity values */
+    border-radius: 9999px;
+    transition: background-color 0.15s ease;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(46, 91, 255, 0.4); /* Fades gently into branding Primary Accent on interaction */
+  }
+
+  /* Support for Firefox scrollbar properties on all elements */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(10, 14, 26, 0.15) transparent;
+  }
+}
