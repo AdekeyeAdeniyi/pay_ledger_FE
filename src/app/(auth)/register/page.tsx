@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/Button";
 import { ChevronRight, ArrowLeft } from "lucide-react";
 import { useRegister } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import { setAuthToken } from "@/services/authService";
+import { AxiosError } from "axios";
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1);
@@ -35,17 +37,18 @@ export default function RegisterPage() {
   const onProvisionSubmit = async (data: RegisterFields) => {
     setGlobalError(null);
     try {
-      registerMutation.mutate(data, {
-        onSuccess: (response) => {
-          if (response.success) {
-            // Now you can safely navigate
-            localStorage.setItem("access_token", response.data.access_token);
-            router.push("/dashboard");
-          }
-        },
-      });
-    } catch {
-      setGlobalError("Failed to initialize secure workspace.");
+      const response = await registerMutation.mutateAsync(data);
+      if (response.success) {
+        setAuthToken(response.data.access_token);
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        const message = error.response?.data?.message ?? "Failed to initialize secure workspace.";
+        setGlobalError(message);
+      } else {
+        setGlobalError("Failed to initialize secure workspace.");
+      }
     }
   };
 

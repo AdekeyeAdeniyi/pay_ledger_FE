@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useLogin } from "@/hooks/useAuth";
 import { setAuthToken } from "@/services/authService";
+import { AxiosError } from "axios";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,16 +28,18 @@ export default function LoginPage() {
   const onSubmitForm = async (data: LoginFields) => {
     setGlobalError(null);
     try {
-      loginMutation.mutate(data, {
-        onSuccess: (response) => {
-          if (response.success) {
-            setAuthToken(response.data.access_token);
-            router.push("/dashboard");
-          }
-        },
-      });
-    } catch {
-      setGlobalError("Failed to initialize secure workspace.");
+      const response = await loginMutation.mutateAsync(data);
+      if (response.success) {
+        setAuthToken(response.data.access_token);
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        const message = error.response?.data?.message ?? "Failed to initialize secure workspace.";
+        setGlobalError(message);
+      } else {
+        setGlobalError("Failed to initialize secure workspace.");
+      }
     }
   };
 
@@ -49,12 +52,7 @@ export default function LoginPage() {
 
       {globalError && <div className="p-3 bg-pl-red-light border border-pl-red/20 rounded-pl-sm text-xs text-pl-red font-medium mb-5">{globalError}</div>}
 
-      <form
-        onSubmit={handleSubmit((data, e) => {
-          e?.preventDefault();
-          onSubmitForm(data);
-        })}
-        className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
         <Input label="Infrastructure Admin Email" type="email" placeholder="musa@enterprises.com" error={errors.email?.message} disabled={isSubmitting} {...register("email")} />
 
         <Input label="Security Access Key" type="password" placeholder="••••••••" error={errors.password?.message} disabled={isSubmitting} {...register("password")} />
