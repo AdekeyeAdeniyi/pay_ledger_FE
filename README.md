@@ -39,6 +39,17 @@ NEXT_PUBLIC_API_URL=your_api_url_here
 NEXT_PUBLIC_NOMBA_SECRET=NombaHackathon2026
 ```
 
+## Testing Credentials
+
+Use the following demo account to test the application:
+
+```text
+Email:    elitecareer@gmail.com
+Password: Password@1234
+```
+
+> **Note:** These credentials are intended for testing and demonstration purposes only.
+
 ## 🔐 Webhook Integration & Testing
 
 To integrate with Nomba and test reconciliation, use the Developer's
