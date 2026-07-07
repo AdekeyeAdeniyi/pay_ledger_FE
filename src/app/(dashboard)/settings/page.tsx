@@ -19,9 +19,15 @@ export default function SettingsPage() {
     billingEmail: "-",
     phone: "-",
   });
+  const [webhookUrl, setWebhookUrl] = useState("");
+
+  useEffect(() => {
+    if (data?.data?.id) {
+      setWebhookUrl(`${window.location.origin}/webhook/nomba/${data.data.id}`);
+    }
+  }, [data?.data?.id]);
 
   const [copied, setCopied] = useState(false);
-  const webhookUrl = `${window.location.origin}/webhook/nomba/${data?.data.id}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(webhookUrl);
