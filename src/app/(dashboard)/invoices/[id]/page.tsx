@@ -90,34 +90,36 @@ export default function InvoiceDetailsPage() {
           </div>
         </div>
 
-        {invoice.status === "PENDING" && (
-          <div className="flex flex-wrap gap-3">
-            {!invoice.checkoutLink && (
-              <Button variant="ghost" size="sm" onClick={() => setIsEditModalOpen(true)}>
-                <Pencil size={16} />
-                Edit
-              </Button>
-            )}
+        <div className="flex flex-wrap gap-3">
+          {invoice.status === "PENDING" && (
+            <div className="flex flex-wrap gap-3">
+              {!invoice.checkoutLink && (
+                <Button variant="ghost" size="sm" onClick={() => setIsEditModalOpen(true)}>
+                  <Pencil size={16} />
+                  Edit
+                </Button>
+              )}
 
-            {invoice.checkoutLink && (
-              <Button variant="primary" size="sm" onClick={() => window.open(invoice.checkoutLink!, "_blank")}>
-                <ExternalLink size={16} />
-                Checkout
-              </Button>
-            )}
-            {!invoice.checkoutLink && (
-              <Button variant="danger" size="sm" onClick={() => setDeleteOpen(true)}>
-                <Trash2 size={16} />
-                Cancel
-              </Button>
-            )}
-          </div>
-        )}
+              {invoice.checkoutLink && (
+                <Button variant="primary" size="sm" onClick={() => window.open(invoice.checkoutLink!, "_blank")}>
+                  <ExternalLink size={16} />
+                  Checkout
+                </Button>
+              )}
+              {!invoice.checkoutLink && (
+                <Button variant="danger" size="sm" onClick={() => setDeleteOpen(true)}>
+                  <Trash2 size={16} />
+                  Cancel
+                </Button>
+              )}
+            </div>
+          )}
 
-        <Button variant="ghost" size="sm" onClick={() => viewReciept(invoiceId)} isLoading={isPending} disabled={isPending}>
-          <FileDown size={16} />
-          {isPending ? "Preparing…" : "View receipt"}
-        </Button>
+          <Button variant="ghost" size="sm" onClick={() => viewReciept(invoiceId)} isLoading={isPending} disabled={isPending}>
+            <FileDown size={16} />
+            {isPending ? "Preparing…" : "View receipt"}
+          </Button>
+        </div>
       </div>
       {/* ===================================================== */}
       {/* Summary Cards */}
@@ -234,10 +236,10 @@ export default function InvoiceDetailsPage() {
             </div>
 
             <div>
-              <p className="text-xs uppercase text-pl-ink-3">Order Reference</p>
+              <p className="text-xs uppercase text-pl-ink-3">{invoice.paymentPath == "CHECKOUT" ? "Order" : "Account"} Reference</p>
 
               <div className="mt-1 flex items-center gap-2">
-                <span className="font-mono text-pl-ink">{invoice.orderReference || "--"}</span>
+                <span className="font-mono text-pl-ink">{invoice.orderReference || invoice.accountRef}</span>
 
                 {invoice.orderReference && (
                   <button onClick={() => navigator.clipboard.writeText(invoice.orderReference!)} className="rounded p-1 hover:bg-pl-surface">
@@ -270,7 +272,7 @@ export default function InvoiceDetailsPage() {
       {/* ===================================================== */}
       {/* Checkout Information */}
       {/* ===================================================== */}
-      {invoice.status === "PENDING" && invoice.accountId && (
+      {invoice.status !== "PAID" && invoice.paymentPath == "CHECKOUT" && (
         <Card className="rounded-pl-lg border border-pl-border-dark">
           <div className="border-b border-pl-border-dark p-5">
             <h2 className="text-lg font-bold text-pl-ink">Checkout Information</h2>

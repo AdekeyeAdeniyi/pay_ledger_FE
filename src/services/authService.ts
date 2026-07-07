@@ -25,6 +25,7 @@ interface RegisterData {
     role: string;
   };
   access_token: string;
+  refresh_token: string;
   webhookSecret: string;
 }
 
@@ -33,13 +34,17 @@ interface RegisterResponse {
   data: RegisterData;
 }
 
-export const setAuthToken = (token: string | null) => {
+export const setAuthToken = (token: string | null, type: "access" | "refresh" = "access") => {
   if (token) {
-    localStorage.setItem("access_token", token);
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    localStorage.setItem(`${type}_token`, token);
+    if (type === "access") {
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
   } else {
-    localStorage.removeItem("access_token");
-    delete api.defaults.headers.common["Authorization"];
+    localStorage.removeItem(`${type}_token`);
+    if (type === "access") {
+      delete api.defaults.headers.common["Authorization"];
+    }
   }
 };
 

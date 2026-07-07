@@ -31,6 +31,7 @@ export default function LoginPage() {
       const response = await loginMutation.mutateAsync(data);
       if (response.success) {
         setAuthToken(response.data.access_token);
+        setAuthToken(response.data.refresh_token, "refresh");
         router.push("/dashboard");
       }
     } catch (error) {

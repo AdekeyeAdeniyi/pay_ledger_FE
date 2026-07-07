@@ -1,61 +1,69 @@
 "use client";
-
+import { useDashboardOverview } from "@/hooks/useDashboard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { ArrowUpRight, FileText, Layers, Users, CheckCircle2, RefreshCw } from "lucide-react";
+import { formatCurrency } from "@/lib/formatCurrency";
+import PreLoader from "@/components/modal/Preloader";
 
 export default function DashboardOverviewPage() {
-  const metricSummaries = [
-    { title: "Total Collections", value: "₦4,250,000", change: "+24.5%", icon: ArrowUpRight, color: "text-pl-emerald", bg: "bg-pl-emerald-light" },
-    { title: "Receivables", value: "₦1,120,000", change: "14 Invoices", icon: FileText, color: "text-pl-amber", bg: "bg-pl-amber-light" },
-    { title: "Excess Credits", value: "₦380,000", change: "Auto Guarded", icon: Layers, color: "text-pl-violet", bg: "bg-pl-violet-light" },
-    { title: "Active Routers", value: "148", change: "99.8% Match", icon: Users, color: "text-pl-primary", bg: "bg-pl-primary-light" },
-  ];
+  const { data, isLoading, refetch } = useDashboardOverview();
 
-  const recentReconciliations = [
+  if (isLoading) return <PreLoader />;
+
+  const { overview, latestInvoices } = data;
+
+  const metricSummaries = [
     {
-      id: "REC-0941",
-      customer: "Musa Enterprises",
-      account: "3320012345",
-      amount: "₦700,000",
-      target: "INV-2026-04",
-      matchedWith: "₦500,000 Invoice",
-      balanceOffset: "₦200,000 Credit",
-      time: "2m ago",
-      status: "paid" as const,
+      title: "Total Invoice Value",
+      value: formatCurrency(overview.totalInvoiceValue),
+      change: `${overview.totalInvoices} Invoices`,
+      icon: FileText,
+      color: "text-pl-primary",
+      bg: "bg-pl-primary-light",
     },
     {
-      id: "REC-0940",
-      customer: "Alhaji & Sons",
-      account: "3320019912",
-      amount: "₦1,200,000",
-      target: "INV-2026-01",
-      matchedWith: "Exact Match",
-      balanceOffset: "₦0 Close",
-      time: "14m ago",
-      status: "paid" as const,
+      title: "Total Amount Collected",
+      value: formatCurrency(overview.totalAmountCollected),
+      change: "Payments Received",
+      icon: ArrowUpRight,
+      color: "text-pl-emerald",
+      bg: "bg-pl-emerald-light",
+    },
+    {
+      title: "Outstanding Balance",
+      value: formatCurrency(overview.outstandingBalance),
+      change: "Pending Payments",
+      icon: Layers,
+      color: "text-pl-amber",
+      bg: "bg-pl-amber-light",
+    },
+    {
+      title: "Excess Credits",
+      value: formatCurrency(overview.excessCreditReceived),
+      change: "Available Credits",
+      icon: Layers,
+      color: "text-pl-violet",
+      bg: "bg-pl-violet-light",
     },
   ];
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* Dashboard Headline */}
+      {/* Header */}
       <div className="flex flex-col items-end md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-pl-ink tracking-tight mb-1">Financial Operations Ledger</h1>
           <p className="text-xs sm:text-sm text-pl-ink-2">Real-time status of collections routing and settlement matching.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" icon={<RefreshCw size={14} />}>
+          <Button variant="ghost" size="sm" onClick={() => refetch()} icon={<RefreshCw size={14} />}>
             <span className="hidden sm:inline">Refresh</span>
-          </Button>
-          <Button variant="primary" size="sm" icon={<Layers size={14} />}>
-            Issue NUBAN Router
           </Button>
         </div>
       </div>
 
-      {/* Aggregate Matrix - Adaptive Grid */}
+      {/* Metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-6">
         {metricSummaries.map((card, idx) => (
           <div key={idx} className="bg-white border border-pl-border-dark p-4 sm:p-6 rounded-pl-lg shadow-xs">
@@ -71,41 +79,30 @@ export default function DashboardOverviewPage() {
         ))}
       </div>
 
-      {/* Full Width Reconciliation Feed */}
+      {/* Reconciliation Feed */}
       <div className="bg-white border border-pl-border-dark rounded-pl-lg p-4 sm:p-6 shadow-xs">
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-base font-bold text-pl-ink tracking-tight">Nomba Event Reconciliation Feed</h2>
             <p className="text-xs text-pl-ink-3">Live stream of verified inbound bank transfers.</p>
           </div>
-          <span className="w-fit text-[10px] uppercase font-extrabold tracking-wider bg-pl-primary-light text-pl-primary px-2.5 py-1 rounded-pl-pill">WebSocket Active</span>
         </div>
 
         <div className="divide-y divide-pl-border-dark">
-          {recentReconciliations.map((log) => (
-            <div key={log.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {latestInvoices.map((inv: any) => (
+            <div key={inv.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex gap-3">
                 <div className="w-10 h-10 rounded-pl-sm bg-pl-surface flex items-center justify-center text-pl-primary shrink-0">
                   <CheckCircle2 size={18} />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-pl-ink">
-                    {log.customer} <span className="text-xs font-normal text-pl-ink-3">({log.account})</span>
-                  </p>
+                  <p className="text-sm font-bold text-pl-ink">{inv.customer.name}</p>
                   <p className="text-xs text-pl-ink-2 mt-0.5">
-                    Received <span className="font-semibold text-pl-ink">{log.amount}</span> &middot; Assigned to{" "}
-                    <span className="font-mono text-pl-primary bg-pl-primary-light px-1 rounded text-[11px]">{log.target}</span>
+                    Inv: <span className="font-mono">{inv.invoiceNumber}</span> &middot; Due: {new Date(inv.dueDate).toLocaleDateString()}
                   </p>
-                  <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px] text-pl-ink-3">
-                    <span className="bg-pl-surface px-1.5 py-0.5 rounded font-medium text-pl-ink-2">{log.matchedWith}</span>
-                    <span className="text-pl-violet font-semibold">{log.balanceOffset}</span>
-                  </div>
                 </div>
               </div>
-              <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0">
-                <StatusBadge status={log.status} />
-                <span className="text-[10px] text-pl-ink-3 font-mono">{log.time}</span>
-              </div>
+              <StatusBadge status={inv.status.toLowerCase()} />
             </div>
           ))}
         </div>

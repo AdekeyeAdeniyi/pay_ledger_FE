@@ -8,6 +8,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Separate instance to avoid infinite interceptor loops
 const refreshApi = axios.create({
   baseURL: API_URL,
   withCredentials: true,
@@ -18,45 +19,45 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("access_token");
-
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
-
     return config;
   },
   (error) => Promise.reject(error),
 );
 
-// Handle expired access token
+interface CustomRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<any>) => {
-    const originalRequest: any = error.config;
+    const originalRequest = error.config as CustomRequestConfig;
 
-    if (error.response?.status === 401 && !originalRequest?._retry && error.response?.data?.code === "TOKEN_EXPIRED") {
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && error.response?.data?.code === "TOKEN_EXPIRED") {
       originalRequest._retry = true;
+      const refreshToken = localStorage.getItem("refresh_token");
 
       try {
-        const { data } = await refreshApi.post("/auth/refresh");
-
+        const { data } = await refreshApi.post("/auth/refresh", {
+          refresh_token: refreshToken,
+        });
         const newAccessToken = data.data.access_token;
 
         setAuthToken(newAccessToken);
 
-        api.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        if (originalRequest.headers) {
+          originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+        }
 
         return api(originalRequest);
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
 
         localStorage.removeItem("access_token");
-
-        delete api.defaults.headers.common.Authorization;
-
-        window.location.href = "/login";
 
         return Promise.reject(refreshError);
       }

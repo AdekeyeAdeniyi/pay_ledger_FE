@@ -1,156 +1,116 @@
 "use client";
 
 import { useState } from "react";
-import { BadgeStatusType, StatusBadge } from "@/components/ui/StatusBadge";
+import { useTransactions } from "@/hooks/useTransactions";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import PreLoader from "@/components/modal/Preloader";
 import { Button } from "@/components/ui/Button";
-import { Search, Download, ShieldCheck, X, ChevronRight, Clock, ArrowUpRight } from "lucide-react";
-
-interface AuditRow {
-  id: string;
-  customerName: string;
-  virtualAccount: string;
-  receivedAmount: number;
-  matchedInvoice: string;
-  speed: string;
-  surplus: number;
-  timestamp: string;
-  status: BadgeStatusType;
-}
+import { Download, Search, ShieldCheck, X } from "lucide-react";
 
 export default function TransactionsPage() {
-  const [filterQuery, setFilterQuery] = useState("");
-  const [selectedLog, setSelectedLog] = useState<AuditRow | null>(null);
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useTransactions(page);
+  const [selectedLog, setSelectedLog] = useState<any>(null);
 
-  const auditLogs: AuditRow[] = [
-    {
-      id: "TXN-99824102",
-      customerName: "Musa Enterprises",
-      virtualAccount: "3320012345",
-      receivedAmount: 700000,
-      matchedInvoice: "INV-2026-04",
-      speed: "1.8s",
-      surplus: 200000,
-      timestamp: "2026-06-27 16:42:11",
-      status: "paid",
-    },
-    {
-      id: "TXN-99823914",
-      customerName: "Alhaji & Sons",
-      virtualAccount: "3320019912",
-      receivedAmount: 1200000,
-      matchedInvoice: "INV-2026-01",
-      speed: "2.3s",
-      surplus: 0,
-      timestamp: "2026-06-27 16:15:02",
-      status: "paid",
-    },
-    {
-      id: "TXN-99821455",
-      customerName: "Gbenga Supply",
-      virtualAccount: "3320015541",
-      receivedAmount: 350000,
-      matchedInvoice: "INV-2026-09",
-      speed: "3.1s",
-      surplus: 0,
-      timestamp: "2026-06-27 14:22:55",
-      status: "partially_paid",
-    },
-  ];
+  if (isLoading) return <PreLoader />;
 
-  const filteredLogs = auditLogs.filter((log) => log.customerName.toLowerCase().includes(filterQuery.toLowerCase()) || log.id.includes(filterQuery));
+  const { transactions } = data;
 
   return (
-    <div className="space-y-6 w-full relative">
-      {/* Header */}
+    <div className="space-y-6 w-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-extrabold text-pl-ink tracking-tight">Immutable Transaction Audit Trail</h1>
+
           <p className="text-xs text-pl-ink-3 mt-0.5">Real-time cryptographic logging for inbound virtual account webhooks.</p>
         </div>
+
         <Button variant="ghost" size="sm" icon={<Download size={14} />}>
           Export CSV
         </Button>
       </div>
 
-      {/* Utility Toolbar */}
-      <div className="bg-white p-4 rounded-pl-lg border border-pl-border-dark flex flex-col sm:flex-row gap-3 items-center justify-between shadow-xs">
-        <div className="relative w-full sm:max-w-md">
-          <Search size={16} className="absolute left-3 top-3 text-pl-ink-3" />
-          <input
-            type="text"
-            placeholder="Search Reference or Customer..."
-            value={filterQuery}
-            onChange={(e) => setFilterQuery(e.target.value)}
-            className="w-full pl-9 pr-4 h-10 border border-pl-border-dark bg-white rounded-pl-sm text-sm outline-none focus:border-pl-primary transition-all"
-          />
-        </div>
-        <div className="flex items-center gap-2 text-xs text-pl-ink-3 font-medium">
-          <ShieldCheck size={14} className="text-pl-emerald" />
-          <span>Verified TLS 1.3 Blocks</span>
-        </div>
-      </div>
-
-      {/* Audit Table */}
-      <div className="bg-white border border-pl-border-dark rounded-pl-lg shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-pl-surface text-pl-ink-2 uppercase font-bold text-xs border-b border-pl-border-dark">
+      <div className="bg-white border rounded-pl-lg overflow-hidden">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-pl-surface text-xs font-bold uppercase border-b">
+            <tr>
+              <th className="p-4">Target Invoice</th>
+              <th className="p-4">Customer</th>
+              <th className="p-4">Amount</th>
+              <th className="p-4 text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {/* 1. Ensure transactions exist and check its length */}
+            {!data?.transactions || data.transactions.length === 0 ? (
               <tr>
-                <th className="p-4">Reference</th>
-                <th className="p-4">Customer</th>
-                <th className="p-4">Amount</th>
-                <th className="p-4 hidden sm:table-cell">Target Invoice</th>
-                <th className="p-4 text-right">Status</th>
+                <td colSpan={6} className="p-8 text-center text-pl-ink-3">
+                  No transactions found.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-pl-border-dark">
-              {filteredLogs.map((log) => (
-                <tr key={log.id} onClick={() => setSelectedLog(log)} className="hover:bg-pl-surface/40 transition-colors cursor-pointer">
-                  <td className="p-4 font-mono font-bold">{log.id}</td>
-                  <td className="p-4 font-bold text-pl-ink">{log.customerName}</td>
-                  <td className="p-4 font-black">₦{log.receivedAmount.toLocaleString()}</td>
-                  <td className="p-4 hidden sm:table-cell text-pl-ink-2">{log.matchedInvoice}</td>
+            ) : (
+              data.transactions.map((txn: any) => (
+                <tr key={txn.id} onClick={() => setSelectedLog(txn)} className="cursor-pointer hover:bg-pl-surface/40">
+                  <td className="p-4 font-mono font-bold text-pl-ink-2">{txn.invoice?.invoiceNumber ?? "---"}</td>
+
+                  <td className="p-4 font-bold text-pl-ink">{txn.customer?.name ?? "Unknown"}</td>
+
+                  <td className="p-4 font-black">₦{parseFloat(txn.creditAmount || 0).toLocaleString()}</td>
+
                   <td className="p-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <StatusBadge status={log.status} />
-                      <ChevronRight size={16} className="text-pl-ink-3" />
-                    </div>
+                    <StatusBadge status={txn.invoice?.status?.toLowerCase() ?? "pending"} />
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* Detail Drawer */}
+      {/* Detail Drawer - Mapping dynamic data */}
       {selectedLog && (
         <div className="fixed inset-0 z-50 flex justify-end">
+          {/* Backdrop */}
           <div className="absolute inset-0 bg-pl-ink/20 backdrop-blur-sm" onClick={() => setSelectedLog(null)} />
-          <div className="relative w-full max-w-sm bg-white border-l border-pl-border-dark h-full p-6 shadow-2xl animate-in slide-in-from-right duration-300">
+
+          {/* Drawer Panel */}
+          <div className="relative w-full max-w-sm bg-white border-l border-pl-border-dark h-full p-6 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+            {/* Drawer Header */}
             <div className="flex items-center justify-between mb-8">
-              <h2 className="font-bold text-lg">Transaction Details</h2>
-              <button onClick={() => setSelectedLog(null)} className="p-1 hover:bg-pl-surface rounded">
+              <h2 className="font-bold text-lg text-pl-ink">Transaction Details</h2>
+              <button onClick={() => setSelectedLog(null)} className="p-2 hover:bg-pl-surface rounded-full transition-colors text-pl-ink-3 hover:text-pl-ink">
                 <X size={20} />
               </button>
             </div>
 
-            <div className="space-y-6">
+            {/* Main Content */}
+            <div className="space-y-6 grow overflow-y-auto">
+              {/* Status Badge Top Level */}
+              <div className="flex justify-between items-center bg-pl-surface p-3 rounded-pl-sm">
+                <span className="text-xs font-bold text-pl-ink-2">Current Status</span>
+                <StatusBadge status={selectedLog.invoice?.status?.toLowerCase() || "pending"} />
+              </div>
+
               {[
-                { label: "Customer", value: selectedLog.customerName },
-                { label: "Account", value: selectedLog.virtualAccount },
-                { label: "Timestamp", value: selectedLog.timestamp },
-                { label: "Match Speed", value: selectedLog.speed, icon: Clock },
-                { label: "Surplus Credit", value: `₦${selectedLog.surplus.toLocaleString()}`, icon: ArrowUpRight },
+                { label: "Reference", value: selectedLog.reference, font: "font-mono" },
+                { label: "Entry Type", value: selectedLog.entryType.replace(/_/g, " ") },
+                { label: "Customer", value: selectedLog.customer?.name },
+                { label: "Phone", value: selectedLog.customer?.phone },
+                { label: "Credit Amount", value: `₦${parseFloat(selectedLog.creditAmount).toLocaleString()}` },
+                { label: "Balance Due", value: selectedLog.invoice?.balanceDue ? `₦${parseFloat(selectedLog.invoice.balanceDue).toLocaleString()}` : "N/A" },
               ].map((item) => (
                 <div key={item.label} className="border-b border-pl-border-dark pb-3">
                   <div className="text-[10px] text-pl-ink-3 uppercase font-bold mb-1">{item.label}</div>
-                  <div className="text-sm font-semibold text-pl-ink">{item.value}</div>
+                  <div className={`text-sm font-semibold text-pl-ink ${item.font || ""}`}>{item.value}</div>
                 </div>
               ))}
-              <div className="pt-4">
-                <StatusBadge status={selectedLog.status} />
-              </div>
+            </div>
+
+            {/* Footer Action */}
+            <div className="mt-6 pt-6 ">
+              <Button variant="primary" className="w-full" onClick={() => setSelectedLog(null)}>
+                Close Details
+              </Button>
             </div>
           </div>
         </div>

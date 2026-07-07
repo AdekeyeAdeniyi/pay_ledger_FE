@@ -44,6 +44,7 @@ export interface Invoice {
   organizationId: string;
   customerId: string;
   accountId: string;
+  accountRef: string;
 
   status: InvoiceStatus;
 
@@ -61,6 +62,7 @@ export interface Invoice {
 
   createdAt: string;
   updatedAt: string;
+  paymentPath: "BANK_TRANSFER" | "CHECKOUT";
 
   customer: {
     id: string;
