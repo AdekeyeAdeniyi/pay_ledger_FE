@@ -36,7 +36,6 @@ Create a `.env.local` file in your root directory:
 
 ```bash
 NEXT_PUBLIC_API_URL=your_api_url_here
-NEXT_PUBLIC_NOMBA_SECRET=NombaHackathon2026
 ```
 
 ## Testing Credentials

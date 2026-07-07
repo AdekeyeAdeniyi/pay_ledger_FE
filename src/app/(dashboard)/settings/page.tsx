@@ -21,7 +21,7 @@ export default function SettingsPage() {
   });
 
   const [copied, setCopied] = useState(false);
-  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/webhooks/nomba/${data?.data.id}`;
+  const webhookUrl = `${process.env.NEXT_PUBLIC_API_URL}/webhooks/nomba/${data?.data.id}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(webhookUrl);
